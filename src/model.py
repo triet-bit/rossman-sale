@@ -97,12 +97,11 @@ def prepare_data(df, feature_cols, target_col='log_Sales'):
 
     X = df[available].fillna(-999)
 
-    # XGBoost chỉ chấp nhận int, float, bool, category.
-    # Ép tất cả string/object sang category (XGB sẽ tự encode khi enable_categorical=True)
-    # Dùng pd.api.types.is_string_dtype() để bắt cả 'object', 'string', ArrowDtype(str), v.v.
+    # Ép tất cả cột không phải số về int (label encoding).
+    # Không dùng category dtype để tránh lỗi với các phiên bản XGBoost cũ.
     for col in X.columns:
-        if pd.api.types.is_string_dtype(X[col]) and not isinstance(X[col].dtype, pd.CategoricalDtype):
-            X[col] = X[col].astype('category')
+        if not pd.api.types.is_numeric_dtype(X[col]):
+            X[col] = X[col].astype('category').cat.codes.astype(int)
 
     y = df[target_col]
     return X, y, df
@@ -114,8 +113,8 @@ def train_xgb_model(X_train, y_train, X_val, y_val,
     if params is None:
         params = XGB_PARAMS
 
-    dtrain = xgb.DMatrix(X_train, label=y_train, enable_categorical=True)
-    dval   = xgb.DMatrix(X_val,   label=y_val, enable_categorical=True)
+    dtrain = xgb.DMatrix(X_train, label=y_train)
+    dval   = xgb.DMatrix(X_val,   label=y_val)
 
     model = xgb.train(
         params,
@@ -239,7 +238,7 @@ def find_best_pairs(results_df, models_dict, holdout_df, top_n=50):
     for _, row in top_models.iterrows():
         mid  = row['model_id']
         X_val, y_val, _ = prepare_data(holdout_df, row['features'])
-        pred_log  = models_dict[mid].predict(xgb.DMatrix(X_val, enable_categorical=True))
+        pred_log  = models_dict[mid].predict(xgb.DMatrix(X_val))
         cache[mid] = {
             'pred': np.expm1(pred_log),
             'true': np.expm1(y_val.values),
@@ -353,7 +352,7 @@ def final_predict(models_and_features, test_df, correction_factor=0.985):
     for model, feats in models_and_features:
         available = [f for f in feats if f in test_df.columns]
         X_test    = test_df[available].fillna(-999)
-        pred_log  = model.predict(xgb.DMatrix(X_test, enable_categorical=True))
+        pred_log  = model.predict(xgb.DMatrix(X_test))
         all_preds.append(np.expm1(pred_log))
 
     all_preds  = np.array(all_preds)              # (n_models, n_rows)
