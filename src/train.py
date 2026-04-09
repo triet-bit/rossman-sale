@@ -21,6 +21,7 @@ Cách chạy:
     python -m src.train        # train & submit
 """
 import sys, os
+import argparse
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pandas as pd
@@ -195,4 +196,12 @@ def main():
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Rossmann Training Pipeline")
+    parser.add_argument('--input_dir', type=str, default=DATA_DIR, help='Thư mục chứa dữ liệu đã preprocessed (train_featured.csv, ...)')
+    parser.add_argument('--output_dir', type=str, default=OUT_DIR, help='Thư mục lưu file kết quả submission.csv')
+    args = parser.parse_args()
+
+    DATA_DIR = args.input_dir
+    OUT_DIR = args.output_dir
+
     main()
