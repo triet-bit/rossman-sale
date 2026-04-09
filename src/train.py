@@ -71,6 +71,12 @@ def main():
     holdout_df = pd.read_csv(os.path.join(DATA_DIR, 'holdout_featured.csv'), low_memory=False)
     test_df    = pd.read_csv(os.path.join(DATA_DIR, 'test_featured.csv'),    low_memory=False)
 
+    # Ép kiểu các cột chuỗi (string/object) sang category cho XGBoost
+    for df in [train_df, holdout_df, test_df]:
+        for col in df.columns:
+            if df[col].dtype == 'object' or str(df[col].dtype) == 'string':
+                df[col] = df[col].astype('category')
+
     for df, name in [(train_df, 'train'), (holdout_df, 'holdout'), (test_df, 'test')]:
         print(f"  {name:8s}: {df.shape[0]:,} rows × {df.shape[1]} cols")
 

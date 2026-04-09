@@ -106,8 +106,8 @@ def train_xgb_model(X_train, y_train, X_val, y_val,
     if params is None:
         params = XGB_PARAMS
 
-    dtrain = xgb.DMatrix(X_train, label=y_train)
-    dval   = xgb.DMatrix(X_val,   label=y_val)
+    dtrain = xgb.DMatrix(X_train, label=y_train, enable_categorical=True)
+    dval   = xgb.DMatrix(X_val,   label=y_val, enable_categorical=True)
 
     model = xgb.train(
         params,
@@ -133,7 +133,7 @@ def get_all_feature_cols(df):
     }
     return [
         col for col in df.columns
-        if col not in exclude and df[col].dtype != object
+        if col not in exclude
     ]
 
 
@@ -218,7 +218,7 @@ def find_best_pairs(results_df, models_dict, holdout_df, top_n=50):
     for _, row in top_models.iterrows():
         mid  = row['model_id']
         X_val, y_val, _ = prepare_data(holdout_df, row['features'])
-        pred_log  = models_dict[mid].predict(xgb.DMatrix(X_val))
+        pred_log  = models_dict[mid].predict(xgb.DMatrix(X_val, enable_categorical=True))
         cache[mid] = {
             'pred': np.expm1(pred_log),
             'true': np.expm1(y_val.values),
@@ -332,7 +332,7 @@ def final_predict(models_and_features, test_df, correction_factor=0.985):
     for model, feats in models_and_features:
         available = [f for f in feats if f in test_df.columns]
         X_test    = test_df[available].fillna(-999)
-        pred_log  = model.predict(xgb.DMatrix(X_test))
+        pred_log  = model.predict(xgb.DMatrix(X_test, enable_categorical=True))
         all_preds.append(np.expm1(pred_log))
 
     all_preds  = np.array(all_preds)              # (n_models, n_rows)
