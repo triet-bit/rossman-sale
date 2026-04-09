@@ -99,8 +99,9 @@ def prepare_data(df, feature_cols, target_col='log_Sales'):
 
     # XGBoost chỉ chấp nhận int, float, bool, category.
     # Ép tất cả string/object sang category (XGB sẽ tự encode khi enable_categorical=True)
+    # Dùng pd.api.types.is_string_dtype() để bắt cả 'object', 'string', ArrowDtype(str), v.v.
     for col in X.columns:
-        if X[col].dtype == 'object' or str(X[col].dtype) in ('string', 'StringDtype'):
+        if pd.api.types.is_string_dtype(X[col]) and not isinstance(X[col].dtype, pd.CategoricalDtype):
             X[col] = X[col].astype('category')
 
     y = df[target_col]
