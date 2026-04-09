@@ -96,6 +96,13 @@ def prepare_data(df, feature_cols, target_col='log_Sales'):
         print(f"  Warning: {len(missing)} features không tìm thấy, bỏ qua.")
 
     X = df[available].fillna(-999)
+
+    # XGBoost chỉ chấp nhận int, float, bool, category.
+    # Ép tất cả string/object sang category (XGB sẽ tự encode khi enable_categorical=True)
+    for col in X.columns:
+        if X[col].dtype == 'object' or str(X[col].dtype) in ('string', 'StringDtype'):
+            X[col] = X[col].astype('category')
+
     y = df[target_col]
     return X, y, df
 
@@ -126,15 +133,28 @@ def train_xgb_model(X_train, y_train, X_val, y_val,
 
 
 def get_all_feature_cols(df):
-    """Trả về list tất cả numeric feature columns (bỏ target và meta)."""
+    """Trả về list tất cả feature columns dùng được cho XGBoost.
+    
+    Giữ lại: int, float, bool, category, object/string có ít unique values.
+    Loại bỏ: target, meta columns, và string columns có >100 unique values
+             (thường là free-text, không có ý nghĩa predictive).
+    """
     exclude = {
         'Sales', 'log_Sales', 'Customers', 'Open',
-        'Store', 'Date', 'state_holiday_flag', 'competition_open_date',
+        'Store', 'Date', 'state_holiday_flag', 'competition_open_date', 'Id',
     }
-    return [
-        col for col in df.columns
-        if col not in exclude
-    ]
+    result = []
+    for col in df.columns:
+        if col in exclude:
+            continue
+        dtype_str = str(df[col].dtype)
+        # Bỏ qua string/object có quá nhiều unique values (free-text)
+        if dtype_str in ('object', 'string', 'StringDtype') or df[col].dtype == 'object':
+            n_unique = df[col].nunique()
+            if n_unique > 100:
+                continue  # quá nhiều giá trị → không hữu ích
+        result.append(col)
+    return result
 
 
 # ============================================================
