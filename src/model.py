@@ -47,7 +47,8 @@ def rmspe_xgb(y_pred, dtrain):
 XGB_PARAMS = {
     'objective':        'reg:squarederror',
     'eta':              0.02,
-    'max_depth':        10,
+    # 'max_depth':        10,
+    'max_depth' : 5, 
     'subsample':        0.9,
     'colsample_bytree': 0.3,     # paper đổi từ 0.7 → 0.3 vì có nhiều features
     'min_child_weight': 5,
@@ -64,11 +65,14 @@ PROBE_PARAMS = {
     'eta':              0.1,
     'colsample_bytree': 0.5,
 }
-PROBE_ROUNDS   = 500   # đủ để xếp hạng feature subsets
+# PROBE_ROUNDS   = 500   # đủ để xếp hạng feature subsets
 
-N_ROUNDS       = 5000  # paper dùng 5000
+# N_ROUNDS       = 5000  # paper dùng 5000
+# EARLY_STOPPING = 100
+PROBE_ROUNDS   = 100   # đủ để xếp hạng feature subsets
+
+N_ROUNDS       = 1000  # paper dùng 5000
 EARLY_STOPPING = 100
-
 
 # ============================================================
 # HELPERS
@@ -97,11 +101,13 @@ def prepare_data(df, feature_cols, target_col='log_Sales'):
 
     X = df[available].fillna(-999)
 
-    # Ép tất cả cột không phải số về int (label encoding).
-    # Không dùng category dtype để tránh lỗi với các phiên bản XGBoost cũ.
-    for col in X.columns:
-        if not pd.api.types.is_numeric_dtype(X[col]):
-            X[col] = X[col].astype('category').cat.codes.astype(int)
+    # Encode non-numeric → int (label encoding). Không dùng category dtype
+    # để tránh lỗi enable_categorical với mọi phiên bản XGBoost.
+    non_numeric = [c for c in X.columns if not pd.api.types.is_numeric_dtype(X[c])]
+    if non_numeric:
+        X = X.copy()
+        for col in non_numeric:
+            X[col] = X[col].astype('category').cat.codes.astype(np.int16)
 
     y = df[target_col]
     return X, y, df
@@ -352,6 +358,14 @@ def final_predict(models_and_features, test_df, correction_factor=0.985):
     for model, feats in models_and_features:
         available = [f for f in feats if f in test_df.columns]
         X_test    = test_df[available].fillna(-999)
+
+        # Encode non-numeric → int (giống prepare_data, dứt điểm mọi dtype lạ)
+        non_numeric = [c for c in X_test.columns if not pd.api.types.is_numeric_dtype(X_test[c])]
+        if non_numeric:
+            X_test = X_test.copy()
+            for col in non_numeric:
+                X_test[col] = X_test[col].astype('category').cat.codes.astype(np.int16)
+
         pred_log  = model.predict(xgb.DMatrix(X_test))
         all_preds.append(np.expm1(pred_log))
 
