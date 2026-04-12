@@ -34,10 +34,10 @@ from src.features_trend    import add_trend_features_optimized
 
 # ──── Cấu hình ───────────────────────────────────────────────
 ROOT_DIR      = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RAW_DIR       = os.path.join(ROOT_DIR,"rossmann-store-sales")                              # train.csv, test.csv, store.csv
+RAW_DIR       = os.path.join(ROOT_DIR,"rossmann-store-sales")                             
 OUT_DIR       = os.path.join(ROOT_DIR, 'data', 'processed')
-HOLDOUT_WEEKS = 6     # số tuần cuối dùng làm holdout
-HISTORY_DAYS  = 500   # số ngày lịch sử gắn vào holdout/test để rolling đủ dữ liệu
+HOLDOUT_WEEKS = 6     
+HISTORY_DAYS  = 500   
 
 
 # ============================================================

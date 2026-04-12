@@ -59,10 +59,10 @@ def _check_files(data_dir):
     needed  = ['train_featured.csv', 'holdout_featured.csv', 'test_featured.csv']
     missing = [f for f in needed if not os.path.exists(os.path.join(data_dir, f))]
     if missing:
-        print("❌  Thiếu file(s):")
+        print("Thiếu file(s):")
         for f in missing:
             print(f"      {os.path.join(data_dir, f)}")
-        print("\n👉  Hãy chạy trước: python -m src.preprocess")
+        print("\nHãy chạy trước: python -m src.preprocess")
         sys.exit(1)
 
 
@@ -73,7 +73,7 @@ def _save_submission(test_df, preds, out_dir, filename):
     sub  = test_out[['Id', 'Sales']].sort_values('Id')
     path = os.path.join(out_dir, filename)
     sub.to_csv(path, index=False)
-    print(f"  ✅ Đã xuất: {path}  ({len(sub):,} rows, "
+    print(f"  Đã xuất: {path}  ({len(sub):,} rows, "
           f"Sales: {sub['Sales'].min():.0f}–{sub['Sales'].max():.0f})")
     return path
 
@@ -182,7 +182,6 @@ def main(data_dir, out_dir, xgb_weight=0.5):
     _check_files(data_dir)
     os.makedirs(out_dir, exist_ok=True)
 
-    # ── Đọc dữ liệu ─────────────────────────────────────────
     _banner("ĐỌC DỮ LIỆU")
     train_df   = pd.read_csv(os.path.join(data_dir, 'train_featured.csv'),   low_memory=False)
     holdout_df = pd.read_csv(os.path.join(data_dir, 'holdout_featured.csv'), low_memory=False)
@@ -190,11 +189,9 @@ def main(data_dir, out_dir, xgb_weight=0.5):
     for df, name in [(train_df,'train'),(holdout_df,'holdout'),(test_df,'test')]:
         print(f"  {name:8s}: {df.shape[0]:,} rows × {df.shape[1]} cols")
 
-    # ── Train cả 2 pipeline ──────────────────────────────────
     xgb_models,  xgb_rmspe  = run_xgb_pipeline(train_df, holdout_df)
     lgbm_models, lgbm_rmspe = run_lgbm_pipeline(train_df, holdout_df)
 
-    # ── Xuất submission riêng từng framework ─────────────────
     _banner("XUẤT SUBMISSIONS")
 
     xgb_preds  = final_predict(xgb_models, test_df, correction_factor=0.985)
@@ -203,10 +200,8 @@ def main(data_dir, out_dir, xgb_weight=0.5):
     _save_submission(test_df, xgb_preds,  out_dir, 'submission_xgb.csv')
     _save_submission(test_df, lgbm_preds, out_dir, 'submission_lgbm.csv')
 
-    # ── Cross-Ensemble ───────────────────────────────────────
     _banner(f"CROSS-ENSEMBLE  (XGB w={xgb_weight:.2f} | LGBM w={1-xgb_weight:.2f})")
 
-    # Validate cross-ensemble trên holdout
     holdout_filtered = holdout_df[(holdout_df['Open']==1) & (holdout_df['Sales']>0)].copy()
     cross_holdout    = final_predict_cross_ensemble(
         xgb_models, lgbm_models, holdout_filtered, xgb_weight=xgb_weight,
@@ -218,7 +213,6 @@ def main(data_dir, out_dir, xgb_weight=0.5):
     )
     _save_submission(test_df, cross_preds, out_dir, 'submission_cross_ensemble.csv')
 
-    # ── Bảng so sánh cuối ────────────────────────────────────
     _banner("KẾT QUẢ SO SÁNH (Holdout RMSPE — thấp hơn = tốt hơn)")
     print(f"  {'Model':<30} {'RMSPE':>10}")
     print(f"  {'-'*42}")
@@ -229,13 +223,12 @@ def main(data_dir, out_dir, xgb_weight=0.5):
 
     best = min(xgb_rmspe, lgbm_rmspe, cross_rmspe)
     if best == cross_rmspe:
-        rec = 'submission_cross_ensemble.csv  🏆'
+        rec = 'submission_cross_ensemble.csv'
     elif best == lgbm_rmspe:
-        rec = 'submission_lgbm.csv  🏆'
+        rec = 'submission_lgbm.csv'
     else:
-        rec = 'submission_xgb.csv  🏆'
-    print(f"\n  👉  Nộp Kaggle: {rec}")
-    print(f"  (Paper đạt ~0.100 trên private leaderboard)")
+        rec = 'submission_xgb.csv'
+    print(f"\n  Nộp Kaggle: {rec}")
 
 
 if __name__ == '__main__':

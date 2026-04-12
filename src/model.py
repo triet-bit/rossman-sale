@@ -50,13 +50,13 @@ XGB_PARAMS = {
     # 'max_depth':        10,
     'max_depth' : 5, 
     'subsample':        0.9,
-    'colsample_bytree': 0.3,     # paper đổi từ 0.7 → 0.3 vì có nhiều features
+    'colsample_bytree': 0.3,     
     'min_child_weight': 5,
     'nthread':          -1,
     'seed':             42,
     'eval_metric':      'rmse',
-    'tree_method':      'hist',  # histogram-based: nhanh ~3-5x trên CPU
-    'device':           'cuda',  # GPU nếu có; đổi 'cpu' nếu chạy CPU
+    'tree_method':      'hist',  
+    'device':           'cuda',  
 }
 
 # Params nhẹ hơn cho giai đoạn THĂM DÒ (500 models)
@@ -65,13 +65,10 @@ PROBE_PARAMS = {
     'eta':              0.1,
     'colsample_bytree': 0.5,
 }
-# PROBE_ROUNDS   = 500   # đủ để xếp hạng feature subsets
 
-# N_ROUNDS       = 5000  # paper dùng 5000
-# EARLY_STOPPING = 100
-PROBE_ROUNDS   = 100   # đủ để xếp hạng feature subsets
+PROBE_ROUNDS   = 100   
 
-N_ROUNDS       = 1000  # paper dùng 5000
+N_ROUNDS       = 1000 
 EARLY_STOPPING = 100
 
 # ============================================================
@@ -100,9 +97,6 @@ def prepare_data(df, feature_cols, target_col='log_Sales'):
         print(f"  Warning: {len(missing)} features không tìm thấy, bỏ qua.")
 
     X = df[available].fillna(-999)
-
-    # Encode non-numeric → int (label encoding). Không dùng category dtype
-    # để tránh lỗi enable_categorical với mọi phiên bản XGBoost.
     non_numeric = [c for c in X.columns if not pd.api.types.is_numeric_dtype(X[c])]
     if non_numeric:
         X = X.copy()
@@ -164,7 +158,7 @@ def get_all_feature_cols(df):
 
 
 # ============================================================
-# BƯỚC 5B: RANDOM FEATURE SELECTION
+# RANDOM FEATURE SELECTION
 # ============================================================
 
 def run_random_feature_selection(
@@ -226,7 +220,7 @@ def run_random_feature_selection(
 
 
 # ============================================================
-# BƯỚC 5C: TÌM CẶP ENSEMBLE TỐT NHẤT
+# TÌM CẶP ENSEMBLE TỐT NHẤT
 # ============================================================
 
 def find_best_pairs(results_df, models_dict, holdout_df, top_n=50):
@@ -270,7 +264,7 @@ def find_best_pairs(results_df, models_dict, holdout_df, top_n=50):
 
 
 # ============================================================
-# BƯỚC 5D: COMBINED MODEL
+# COMBINED MODEL
 # ============================================================
 
 def build_combined_model(pairs_df, results_df, train_df, holdout_df,
@@ -301,7 +295,7 @@ def build_combined_model(pairs_df, results_df, train_df, holdout_df,
 
 
 # ============================================================
-# BƯỚC 5E: SEASON + MONTH-AHEAD MODELS
+# SEASON + MONTH-AHEAD MODELS
 # ============================================================
 
 def build_season_model(train_df, holdout_df, feature_cols, n_rounds=N_ROUNDS):
@@ -336,7 +330,7 @@ def build_month_ahead_model(train_df, holdout_df, feature_cols, n_rounds=N_ROUND
 
 
 # ============================================================
-# BƯỚC 5F: FINAL ENSEMBLE
+# FINAL ENSEMBLE
 # ============================================================
 
 def final_predict(models_and_features, test_df, correction_factor=0.985):
@@ -359,7 +353,6 @@ def final_predict(models_and_features, test_df, correction_factor=0.985):
         available = [f for f in feats if f in test_df.columns]
         X_test    = test_df[available].fillna(-999)
 
-        # Encode non-numeric → int (giống prepare_data, dứt điểm mọi dtype lạ)
         non_numeric = [c for c in X_test.columns if not pd.api.types.is_numeric_dtype(X_test[c])]
         if non_numeric:
             X_test = X_test.copy()
@@ -369,9 +362,8 @@ def final_predict(models_and_features, test_df, correction_factor=0.985):
         pred_log  = model.predict(xgb.DMatrix(X_test))
         all_preds.append(np.expm1(pred_log))
 
-    all_preds  = np.array(all_preds)              # (n_models, n_rows)
+    all_preds  = np.array(all_preds)   # (n_models, n_rows)
 
-    # Harmonic Mean ổn định số học
     eps        = 1e-6
     safe_preds = np.maximum(all_preds, eps)
     n_m        = safe_preds.shape[0]

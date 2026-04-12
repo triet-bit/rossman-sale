@@ -59,22 +59,20 @@ LGBM_PARAMS = {
     'objective':        'regression',
     'metric':           'rmse',
     'learning_rate':    0.02,
-    'num_leaves':       31,          # tương đương max_depth~5 trong XGB
-    'max_depth':        -1,          # -1 = không giới hạn (num_leaves kiểm soát)
+    'num_leaves':       31,          
+    'max_depth':        -1,          
     'subsample':        0.9,
     'subsample_freq':   1,
-    'colsample_bytree': 0.3,         # feature_fraction — giữ nguyên như XGB
-    'min_child_samples': 20,         # tương đương min_child_weight XGB
+    'colsample_bytree': 0.3,         
+    'min_child_samples': 20,         
     'reg_alpha':        0.0,
     'reg_lambda':       1.0,
     'n_jobs':           -1,
     'seed':             42,
     'verbose':          -1,
-    # GPU: đổi device='gpu' nếu có GPU LightGBM build
-    'device':           'cpu',
+    'device':           'gpu',
 }
 
-# Params nhẹ hơn cho giai đoạn THĂM DÒ
 PROBE_PARAMS_LGBM = {
     **LGBM_PARAMS,
     'learning_rate':    0.1,

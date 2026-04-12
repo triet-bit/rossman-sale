@@ -62,9 +62,9 @@ def _check_files():
 def main():
     _check_files()
 
-    # ── BƯỚC 5A: Đọc dữ liệu đã xử lý ──────────────────────
+    # ──  Đọc dữ liệu đã xử lý ──────────────────────
     print("=" * 60)
-    print("BƯỚC 5A: Đọc dữ liệu đã pre-processed")
+    print("Đọc dữ liệu đã pre-processed")
     print("=" * 60)
 
     train_df   = pd.read_csv(os.path.join(DATA_DIR, 'train_featured.csv'),   low_memory=False)
@@ -77,9 +77,9 @@ def main():
     all_feature_cols = get_all_feature_cols(train_df)
     print(f"\n  Total features available: {len(all_feature_cols)}")
 
-    # ── BƯỚC 5B: Random Feature Selection ───────────────────
+    # ── Random Feature Selection ───────────────────
     print("\n" + "=" * 60)
-    print("BƯỚC 5B: Random Feature Selection (500 probe models)")
+    print("Random Feature Selection (500 probe models)")
     print("=" * 60)
 
     results_df, models_dict = run_random_feature_selection(
@@ -91,9 +91,9 @@ def main():
         max_features     = 60,
     )
 
-    # ── BƯỚC 5C: Tìm cặp ensemble tốt nhất ─────────────────
+    # ── Tìm cặp ensemble tốt nhất ─────────────────
     print("\n" + "=" * 60)
-    print("BƯỚC 5C: Tìm cặp ensemble tốt nhất")
+    print("Tìm cặp ensemble tốt nhất")
     print("=" * 60)
 
     pairs_df = find_best_pairs(
@@ -103,9 +103,9 @@ def main():
         top_n       = 50,
     )
 
-    # ── BƯỚC 5D: Combined Model ──────────────────────────────
+    # ── Combined Model ──────────────────────────────
     print("\n" + "=" * 60)
-    print("BƯỚC 5D: Combined Model (full params, 5000 rounds)")
+    print("Combined Model (full params, 5000 rounds)")
     print("=" * 60)
 
     combined_model, combined_feats, combined_score = build_combined_model(
@@ -118,7 +118,7 @@ def main():
 
     # ── BƯỚC 5E: Season & Month-ahead Models ────────────────
     print("\n" + "=" * 60)
-    print("BƯỚC 5E: Season Model + Month-ahead Model")
+    print("Season Model + Month-ahead Model")
     print("=" * 60)
 
     season_model, season_score = build_season_model(
@@ -144,7 +144,7 @@ def main():
 
     # ── BƯỚC 5F: Đánh giá Final Ensemble trên Holdout ───────
     print("\n" + "=" * 60)
-    print("BƯỚC 5F: Final Ensemble – Validate trên Holdout")
+    print("Final Ensemble – Validate trên Holdout")
     print("=" * 60)
 
     final_models = [
@@ -171,7 +171,7 @@ def main():
 
     # ── BƯỚC 7: Predict Test & Submission ───────────────────
     print("\n" + "=" * 60)
-    print("BƯỚC 7: Predict Test Set → submission.csv")
+    print("Predict Test Set → submission.csv")
     print("=" * 60)
 
     predictions = final_predict(
@@ -190,7 +190,7 @@ def main():
     sub_path   = os.path.join(OUT_DIR, 'submission.csv')
     submission.to_csv(sub_path, index=False)
 
-    print(f"\n🎉 Đã xuất '{sub_path}' thành công!")
+    print(f"\nĐã xuất '{sub_path}' thành công!")
     print(f"   Rows : {len(submission):,}")
     print(f"   Sales: {submission['Sales'].min():.0f} – {submission['Sales'].max():.0f}")
     MODEL_DIR = os.path.join(ROOT_DIR, 'data', 'models')
