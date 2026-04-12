@@ -93,7 +93,9 @@ def prepare_data_lgbm(df, feature_cols, target_col='log_Sales'):
     Tách X, y từ DataFrame cho LightGBM.
     - Lọc Open=1 và Sales>0.
     - Tạo log_Sales nếu chưa có.
-    - LightGBM hỗ trợ category dtype natively → encode thay vì label-encode.
+    - Dùng label-encode (int16) thay vì native category để tránh lỗi
+      "train and valid dataset categorical_feature do not match"
+      khi train/val có số lượng unique values khác nhau sau khi filter.
     """
     df = df.copy()
     if 'Open' in df.columns:
@@ -111,12 +113,13 @@ def prepare_data_lgbm(df, feature_cols, target_col='log_Sales'):
 
     X = df[available].fillna(-999)
 
-    # LightGBM hỗ trợ categorical natively
+    # Label-encode tất cả non-numeric → int16 (giống XGBoost)
+    # Tránh lỗi categorical mismatch giữa train và valid dataset
     non_numeric = [c for c in X.columns if not pd.api.types.is_numeric_dtype(X[c])]
     if non_numeric:
         X = X.copy()
         for col in non_numeric:
-            X[col] = X[col].astype('category')
+            X[col] = X[col].astype('category').cat.codes.astype(np.int16)
 
     y = df[target_col]
     return X, y, df
@@ -363,7 +366,7 @@ def final_predict_lgbm(models_and_features, test_df, correction_factor=0.985):
         if non_numeric:
             X_test = X_test.copy()
             for col in non_numeric:
-                X_test[col] = X_test[col].astype('category')
+                X_test[col] = X_test[col].astype('category').cat.codes.astype(np.int16)
 
         pred_log = model.predict(X_test, num_iteration=model.best_iteration)
         all_preds.append(np.expm1(pred_log))
@@ -428,7 +431,7 @@ def final_predict_cross_ensemble(
         if non_num:
             X_test = X_test.copy()
             for col in non_num:
-                X_test[col] = X_test[col].astype('category')
+                X_test[col] = X_test[col].astype('category').cat.codes.astype(np.int16)
         lgbm_preds.append(np.expm1(model.predict(X_test, num_iteration=model.best_iteration)))
 
     eps = 1e-6
