@@ -20,7 +20,7 @@ Cách chạy:
     python -m src.preprocess   # lần đầu (hoặc khi dữ liệu thay đổi)
     python -m src.train        # train & submit
 """
-import sys, os
+import sys, os, pickle
 import argparse
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -193,7 +193,15 @@ def main():
     print(f"\n🎉 Đã xuất '{sub_path}' thành công!")
     print(f"   Rows : {len(submission):,}")
     print(f"   Sales: {submission['Sales'].min():.0f} – {submission['Sales'].max():.0f}")
+    MODEL_DIR = os.path.join(ROOT_DIR, 'data', 'models')
+    os.makedirs(MODEL_DIR, exist_ok=True)
 
+    with open(os.path.join(MODEL_DIR, 'xgb_models.pkl'), 'wb') as f:
+        pickle.dump(final_models, f)
+
+    # Lưu RMSPE để so sánh sau
+    with open(os.path.join(MODEL_DIR, 'xgb_holdout_rmspe.txt'), 'w') as f:
+        f.write(f"{final_rmspe:.5f}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Rossmann Training Pipeline")

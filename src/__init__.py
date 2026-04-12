@@ -13,7 +13,15 @@ from .model             import (
     build_combined_model, build_season_model,
     build_month_ahead_model, final_predict,
 )
-
+from .model_lgbm import (
+    run_random_feature_selection_lgbm,
+    find_best_pairs_lgbm,
+    build_combined_model_lgbm,
+    build_season_model_lgbm,
+    build_month_ahead_model_lgbm,
+    final_predict_lgbm,
+    final_predict_cross_ensemble,
+)
 __all__ = [
     'add_recent_features',
     'add_temporal_features',
