@@ -165,7 +165,7 @@ def run_random_feature_selection(
     train_df,
     holdout_df,
     all_feature_cols,
-    n_models     = 500,
+    n_models     = 400,
     min_features = 20,
     max_features = 60,
     random_seed  = 42,
