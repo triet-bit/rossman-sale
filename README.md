@@ -56,13 +56,13 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-Trong repo hiện tại, lệnh `python` không nằm sẵn trong `PATH`, vì vậy nên dùng trực tiếp:
-
-```bash
-.venv/bin/python -m ...
-```
 
 ## Dữ liệu đầu vào
+
+Các tài nguyên Kaggle liên quan đến dự án:
+- **Notebook Kaggle dùng để chạy code preprocessing + train dự án**: [fork-of-code-ml](https://www.kaggle.com/code/huynhminhtriet2262/fork-of-code-ml)
+- **Dataset đã tiền xử lý**: [trietdeptrai/preprocess-dataset](https://www.kaggle.com/datasets/trietdeptrai/preprocess-dataset)
+- **Bộ data set ban đầu**: [Rossmann Store Sales](https://www.kaggle.com/competitions/rossmann-store-sales)
 
 Thư mục dữ liệu thô mặc định:
 
@@ -91,13 +91,13 @@ Nếu muốn tái tạo toàn bộ pipeline từ dữ liệu gốc, hãy chạy 
 Lệnh:
 
 ```bash
-.venv/bin/python -m src.preprocess
+python -m src.preprocess
 ```
 
 Hoặc chỉ định thư mục input/output:
 
 ```bash
-.venv/bin/python -m src.preprocess \
+python -m src.preprocess \
   --input_dir rossmann-store-sales \
   --output_dir data/processed
 ```
@@ -121,13 +121,13 @@ Script này sẽ:
 Lệnh:
 
 ```bash
-.venv/bin/python -m src.train
+python -m src.train
 ```
 
 Hoặc:
 
 ```bash
-.venv/bin/python -m src.train \
+python -m src.train \
   --input_dir data/processed \
   --output_dir .
 ```
@@ -152,7 +152,7 @@ Pipeline này gồm:
 Lệnh:
 
 ```bash
-.venv/bin/python -m src.train_lgbm --mode lgbm
+python -m src.train_lgbm --mode lgbm
 ```
 
 Kết quả:
@@ -165,7 +165,7 @@ Kết quả:
 Cách 1: chạy sau khi đã có model XGBoost từ `src.train`
 
 ```bash
-.venv/bin/python -m src.train_lgbm --mode ensemble --xgb_weight 0.5
+python -m src.train_lgbm --mode ensemble --xgb_weight 0.5
 ```
 
 Kết quả:
@@ -175,7 +175,7 @@ Kết quả:
 Cách 2: chạy cả 2 pipeline trong một lệnh
 
 ```bash
-.venv/bin/python -m src.train_ensemble --xgb_weight 0.5
+python -m src.train_ensemble --xgb_weight 0.5
 ```
 
 Kết quả:
@@ -214,10 +214,10 @@ Kết quả:
 Xem nhanh trợ giúp của từng script:
 
 ```bash
-.venv/bin/python -m src.preprocess --help
-.venv/bin/python -m src.train --help
-.venv/bin/python -m src.train_lgbm --help
-.venv/bin/python -m src.train_ensemble --help
+python -m src.preprocess --help
+python -m src.train --help
+python -m src.train_lgbm --help
+python -m src.train_ensemble --help
 ```
 
 ## Kết quả đầu ra thường gặp
@@ -239,8 +239,14 @@ Xem nhanh trợ giúp của từng script:
 
 Nếu chỉ cần chạy lại toàn bộ pipeline cơ bản:
 
-
+```bash
+python -m src.preprocess
+python -m src.train
+```
 
 Nếu muốn xuất luôn submission ensemble giữa XGBoost và LightGBM:
 
-
+```bash
+python -m src.preprocess
+python -m src.train_ensemble --xgb_weight 0.5
+```
